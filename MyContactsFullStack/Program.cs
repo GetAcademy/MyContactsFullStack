@@ -1,9 +1,48 @@
+using MyContactsFullStack;
 using MyContactsFullStack.Model;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 var app = builder.Build();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseSwagger();
+app.UseSwaggerUI();
+
+
+const string connectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=MyContacts;Integrated Security=True";
+
+app.MapGet("/people", () =>
+{
+    var personRepository = new PersonRepository(connectionString);
+    return personRepository.ReadAll();
+});
+app.MapGet("/people/{id}", (Guid id) =>
+{
+    var personRepository = new PersonRepository(connectionString);
+    return personRepository.ReadById(id);
+});
+app.MapDelete("/people/{id}", (Guid id) =>
+{
+    var personRepository = new PersonRepository(connectionString);
+    personRepository.Delete(id);
+});
+app.MapPost("/people", (Person person) =>
+{
+    var personRepository = new PersonRepository(connectionString);
+    personRepository.Create(person);
+});
+app.MapPut("/people", (Person person) =>
+{
+    var personRepository = new PersonRepository(connectionString);
+    personRepository.Update(person);
+});
+
+
+app.Run();
+
+/*
 
 var people = new List<Person>
 {
@@ -34,7 +73,6 @@ app.MapPut("/people", (Person person) =>
     var changePerson = people.SingleOrDefault(p => p.Id == person.Id);
     changePerson.Name = person.Name;
     changePerson.Email = person.Email;
-});
-
-
-app.Run();
+}); 
+ 
+ */
