@@ -6,28 +6,117 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-<!-- 
-    CRUD-operasjonene mellom frontend og backend
+<!--
+1: CRUD-operasjonene mellom frontend og backend
+2: Endre backend til å snakke med db
+    
+    Pause til 13:36
 -->
-Hei
+    <div id="app"></div>
+    <script>
+        const model = {
+            inputs: {
+                id: null,
+                name: null,
+                email: null,
+            },
+            people: [
+                //{ id: '1', name: 'Per', email: 'per@mail.com' },
+                //{ id: '2', name: 'Pål', email: 'paal@mail.com' },
+                //{ id: '3', name: 'Espen', email: 'espen@mail.com' },
+            ],
+        };
 
-<script>
-    const model = {};
+        getData();
 
-    getData();
+        function updateView() {
+            document.getElementById('app').innerHTML = /*HTML*/`
+                <ul>
+                    ${createPeopleHtml()}
+                </ul>
+                <hr/>
+                Fornavn:<br/>
+                <input
+                    type="text"
+                    oninput="model.inputs.name=this.value"
+                    value="${model.inputs.name || ''}"
+                /><br/>
+                E-post:<br/>
+                <input
+                    type="text"
+                    oninput="model.inputs.email=this.value"
+                    value="${model.inputs.email || ''}"
+                /><br/>
+                <button onclick="createOrUpdatePerson()">
+                    ${model.inputs.id == null ? 'Lag ny' : 'Endre'}
+                </button>
+            `;
+        }
 
-    async function getData() {
-        const response = await axios.get('/people');
-        model.people = response.data;
-        updateView();
-    }
+        function createPeopleHtml() {
+            return model.people.map(p => /*HTML*/`
+                <li>
+                    ${p.name}
+                    ${p.email}
+                    <button onclick="editPerson('${p.id}')">rediger</button>
+                    <button onclick="deletePerson('${p.id}')">x</button>
+                </li >
+                `).join('');
+        }
+
+        /* controller */
+        function editPerson(id) {
+            const person = model.people.find(p => p.id == id);
+            if (person == null) return;
+            model.inputs.id = person.id;
+            model.inputs.name = person.name;
+            model.inputs.email = person.email;
+            updateView();
+        }
+
+        /* controller - api */
+        function createOrUpdatePerson() {
+            if (model.inputs.id == null) createPerson();
+            else updatePerson();
+            model.inputs = {
+                id: null,
+                name: null,
+                email: null,
+            };
+            updateView();
+        }
+
+        async function createPerson() {
+            const person = {
+                name: model.inputs.name,
+                email: model.inputs.email,
+            };
+            const response = await axios.post('/people', person);
+            getData();
+        }
+
+        async function updatePerson(){
+            const person = {
+                id: model.inputs.id,
+                name: model.inputs.name,
+                email: model.inputs.email,
+            };
+            const response = await axios.put('/people', person);
+            getData();
+        }
+
+        async function deletePerson(id) {
+            const response = await axios.delete('/people/' + id);
+            getData();
+        }
+
+        async function getData() {
+            const response = await axios.get('/people');
+            model.people = response.data;
+            updateView();
+        }
 
 
-    function updateView() {
-        console.table(model.people);
-    }
-
-
-</script>
+    </script>
 </body>
 </html>
